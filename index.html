@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+      }
+      section{
+        margin: 30px;
+        background-color: aquamarine;
+        padding: 40px;
+      }
+      canvas {
+        border: 1px solid black;
+      }
+      input[type="button"] {
+        border-radius: 10px;
+        border: 0;
+        padding: 10px;
+        font-weight: bold;
+        background-color: azure;
+      }
+      input[type="file"] {
+        background-color: white;
+        width: 200px;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+        color: darkcyan;
+      }
+      #btn5 {
+        background-color: red;
+        color: white;
+        width: 100%;
+        margin-top: 20px;
+      } 
+    </style>
+  </head>
+  <body>
+    <section>
+      <h1>Image Filters</h1>
+
+      <canvas id="can"></canvas><br />
+
+      <h2>Load Image</h2>
+      <input type="file" id="img" accept="image/*" onchange="upload()" />
+
+      <br /><br />
+
+      <h2>Choose Filter</h2>
+      <input type="button" value="Grayscale" id="btn1" onclick="makeGray()" />
+      <input type="button" value="Red" id="btn2" onclick="makeRed()" />
+      <input type="button" value="Blur" id="btn3" onclick="makeBlur()" />
+      <input type="button" value="Rainbow" id="btn4" onclick="makeRainbow()">
+      <br /><br />
+      <input type="button" value="Reset Image" id="btn5" onclick="reset()" />
+    </section>
+  </body>
+  <script src="https://www.dukelearntoprogram.com//course1/common/js/image/SimpleImage.js"></script>
+  <script>
+    var img;
+    var can;
+    var file;
+
+    function upload() {
+      img = document.getElementById("img");
+      can = document.getElementById("can");
+      file = new SimpleImage(img);
+      file.drawTo(can);
+    }
+
+    // Grayscale function 
+    function makeGray() {
+      if(file == null || !file.complete()){
+        alert("Image not loaded");
+        return;
+      }else{
+        filterGray();
+        file.drawTo(can);
+      }
+      
+    }
+
+    function filterGray() {
+      for (var pixel of file.values()) {
+        var avg = (pixel.getRed() + pixel.getGreen() + pixel.getBlue()) / 3;
+        pixel.setRed(avg);
+        pixel.setGreen(avg);
+        pixel.setBlue(avg);
+      }
+    }
+
+    // red function 
+    function makeRed() {
+      if (file == null || !file.complete()) {
+        alert("Image not loaded");
+        return;
+      }
+      filterRed()
+      file.drawTo(can);
+    }
+
+    function filterRed(){
+        for (var pixel of file.values()) {
+        var avg = (pixel.getRed() + pixel.getGreen() + pixel.getBlue()) / 3;
+        if(avg < 128) {
+            pixel.setRed(2*avg);
+            pixel.setGreen(0);
+            pixel.setBlue(0);
+        }else{
+            pixel.setRed(255);
+            pixel.setGreen(2*avg - 255);
+            pixel.setBlue(2*avg - 255)
+        }
+      }
+    }
+
+    // blur function
+    function makeBlur() {
+      if (file == null || !file.complete()) {
+        alert("Image not loaded");
+        return;
+      };
+      let img = filterBlur(file);
+      console.log(img);
+      img.drawTo(can);
+    }
+
+    function filterBlur(image){
+      const width = image.getWidth();
+      const height = image.getHeight();
+      const output = new SimpleImage(width , height);
+      const radius = 2;
+      
+      for(let pixel of image.values()){
+        const x = pixel.getX();
+        const y = pixel.getY();
+
+        if(Math.random() < 0.5) {
+          output.setPixel(x, y, pixel);
+        }else {
+          const [r , g , b] = avgColor(image , x , y , radius);
+          const newPixel = output.getPixel(x , y);
+          newPixel.setRed(r);
+          newPixel.setGreen(g);
+          newPixel.setBlue(b);
+          // output.setPixel(x, y, newPixel);
+        }
+      }
+      return output;
+    }
+
+    function avgColor (image , x , y , radius) {
+      const width = image.getWidth();
+      const height = image.getHeight();
+      let r = 0; g = 0; b = 0; count = 0;
+      console.log("4");
+      
+      for(let dx = -radius ; dx <= radius ; dx++) {
+        for(let dy = -radius; dy <+ radius ; dy++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          
+          if(nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            const otherpixel = image.getPixel(nx,ny);
+            r += otherpixel.getRed();
+            g += otherpixel.getGreen();
+            b += otherpixel.getBlue();
+            count++;
+          }
+        }
+      }
+      
+      return [Math.floor(r/count) , Math.floor(g/count) , Math.floor(b/count)]
+    }
+
+    // reset to original image
+    function reset() {
+      upload();
+    }
+
+  </script>
+</html>
